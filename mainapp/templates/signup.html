@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Signup Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      text-align: center;
+      background-color: #4CAF50;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .otp-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .otp-input {
+      width: 70%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .otp-button {
+      padding: 10px;
+      background-color: #4CAF50;
+      color: #fff;
+      font-size: 14px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .otp-button:hover {
+      background-color: #45a049;
+    }
+
+    .otp-input-container {
+      display: none;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Signup</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% if message %}
+      <div class="alert alert-{{class}}">
+        {{message}}
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username">
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+      </div>
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+      </div>
+      <div class="form-group">
+        <label for="password">password:</label>
+        <input type="text" id="password" name="password" placeholder="Enter password" required>
+      </div>
+      <div class="form-group">
+        <label for="repassword">Re Enter password:</label>
+        <input type="text" id="repassword" name="repassword" placeholder="Re Enter password" required>
+      </div>
+      <div class="form-group">
+        <div class="otp-container">
+          <label for="phone">Phone Number:</label>
+          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+          <button type="button" id="generateOTP" class="otp-button">Get OTP</button>
+        </div>
+        <div class="otp-input-container">
+          <label for="otp">OTP:</label>
+          <div id="message-container"></div>
+          <input type="text" id="otp" name="otp" class="otp-input" placeholder="Enter the OTP">
+        </div>
+      </div>
+
+      <p>Already Have an Account? <a href="{% url 'login' %}">Login</a></p>
+      <input type="submit" class="btn" value="Sign up">
+    </form>
+  </div>
+    <div id="popupNotification" class="alert alert-success" style="display: none;">
+      <span id="notificationMessage"></span>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    document.getElementById('generateOTP').addEventListener('click', function () {
+      document.querySelector('.otp-input-container').style.display = 'block';
+    });
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        let cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          let cookie = jQuery.trim(cookies[i]);
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    $(document).ready(function () {
+      $('#generateOTP').click(function () {
+        var phone = $('#phone').val();
+
+        $.ajax({
+          url: "{% url 'sendotp' %}",
+          type: "POST",
+          data: {
+            phone: phone,
+            csrfmiddlewaretoken: csrftoken
+          },
+          success:function(data){
+            console.log(data)
+          }
+        })
+      })
+    })
+
+    // $(document).ready(function () {
+    //   $.ajax({
+    //     url: "{% url 'signup' %}",
+    //     success: function (data) {
+    //       if (data.message) {
+    //         // $('#message-container').text(data.message);
+    //         alert(data.message)
+    //       }
+    //     }
+    //   });
+    // });
+  </script>
+</body>
+
+</html>

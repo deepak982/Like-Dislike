@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swipe</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        .swipe-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+        }
+
+        .swipe-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            transition: transform 0.3s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .swipe-card.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .swipe-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .button.left {
+            background-color: #FF5722;
+            margin-right: auto;
+        }
+
+        .button.right {
+            background-color: #4CAF50;
+            margin-left: auto;
+        }
+
+        .center-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        .center-image img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        .history-container {
+        margin-top: 30px;
+        text-align: center;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .history-container h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .history-container h2 {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .history-container ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .history-container li {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    </style>
+</head>
+<body>
+    <a href="{% url 'logout' %}">Logout</a>
+    <div class="swipe-container">
+        {% for image in images %}
+        <div class="swipe-card {% if forloop.first %}active{% endif %}">
+            <div class="center-image">
+                <img src="{{ image.image.url }}" alt="{{ image.name }}">
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="button-container">
+            <button class="button left" onclick="handleSwipe('dislike')">Left</button>
+            <button class="button right" onclick="handleSwipe('like')">Right</button>
+        </div>
+    </div>
+
+    <div class="message"></div>
+
+    <div class="history-container">
+        <h1>Page refresh to see latest History</h1>
+        <h2>History</h2>
+        <ul id="history-list">
+            {% for item in history %}
+            <li>{{ item.user }} - {{item.image}} -{{ item.action }} - {{item.action_timestamp}}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        const swipeContainer = document.querySelector('.swipe-container');
+        const cards = document.querySelectorAll('.swipe-card');
+        const message = document.querySelector('.message');
+        let cardIndex = 0;
+        let isLastCard = false;
+
+        function handleSwipe(action) {
+            if (isLastCard) {
+                const userName = "{{userName}}";
+                message.textContent = userName + ", you have rated all the images. Thank You!";
+                return;
+            }
+
+            const currentCard = cards[cardIndex];
+            const nextCardIndex = (cardIndex + 1) % cards.length;
+            const nextCard = cards[nextCardIndex];
+
+            const currentImageName = currentCard.querySelector('img').alt;
+
+            if (action === 'like') {
+                currentCard.style.transform = 'translateX(100%) rotate(30deg)';
+                message.textContent = 'You liked the image "' + currentImageName + '"!';
+            } else if (action === 'dislike') {
+                currentCard.style.transform = 'translateX(-100%) rotate(-30deg)';
+                message.textContent = 'You disliked the image "' + currentImageName + '"!';
+            }
+
+            
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    let cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        let cookie = jQuery.trim(cookies[i]);
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            var csrftoken = getCookie('csrftoken');
+
+            $.ajax({
+                type:"POST",
+                url : "{% url 'history' %}",
+                data: {
+                    name: currentImageName,
+                    action: action,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success:function(response){
+                    console.log(response)
+                }
+            })
+
+            nextCard.classList.add('active');
+            nextCard.style.transform = '';
+
+            setTimeout(() => {
+                currentCard.classList.remove('active');
+                currentCard.style.transform = '';
+                message.textContent = '';
+                cardIndex = nextCardIndex;
+                if (nextCardIndex === cards.length - 1) {
+                    isLastCard = true;
+                    setTimeout(() => {
+                        const userName = '{{username}}'; // Replace with the user's name
+                        message.textContent = userName + ", you have rated all the images. Thank You!";
+                    }, 5000);
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>
