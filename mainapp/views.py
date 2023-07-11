@@ -45,7 +45,7 @@ def login (request):
 
             if otp == stored_otp:
                 user = profile.user
-                auth_login(request, user)  # Renamed the function to avoid conflict
+                auth_login(request, user)
                 return redirect('/')
             else:
                 return render(request,'login.html',{'message':"Invalid OTP"})
